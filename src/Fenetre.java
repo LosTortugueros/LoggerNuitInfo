@@ -16,13 +16,14 @@ public class Fenetre extends JFrame implements WindowListener {
 
     private JFormattedTextField field_id;
     private JTextField field_num;
+    private JTextField field_parcours;
     private Sender sender;
 
     public Fenetre()
     {
         GlobalScreen.getInstance().setEventDispatcher(new SwingExecutorService());
 
-        GridLayout layout = new GridLayout(2,2);
+        GridLayout layout = new GridLayout(3,2);
         this.setLayout(layout);
         setTitle("Nuit de l'info - calcul clavier & souris");
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -38,6 +39,11 @@ public class Fenetre extends JFrame implements WindowListener {
         this.field_num.setEditable(false);
         this.add(this.field_num);
 
+        this.add(new JLabel("Nombre de m parcourus :"));
+        this.field_parcours = new JTextField("0");
+        this.field_parcours.setEditable(false);
+        this.add(this.field_parcours);
+
         pack();
     }
 
@@ -49,6 +55,11 @@ public class Fenetre extends JFrame implements WindowListener {
     public void addNTouches(int n)
     {
         this.field_num.setText("" + (n + Integer.parseInt(this.field_num.getText())));
+    }
+
+    public void addNParcours(float n)
+    {
+        this.field_parcours.setText("" + (n + Float.parseFloat(this.field_parcours.getText())));
     }
 
     public static void main(String[] str)
