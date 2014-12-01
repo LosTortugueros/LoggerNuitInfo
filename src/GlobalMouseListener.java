@@ -15,7 +15,7 @@ public class GlobalMouseListener implements NativeMouseInputListener {
 
     @Override
     public void nativeMouseClicked(NativeMouseEvent nativeMouseEvent) {
-        System.out.println("clicked");
+        this.sender.addClick();
     }
 
     @Override

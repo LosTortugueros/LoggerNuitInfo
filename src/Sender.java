@@ -13,12 +13,14 @@ public class Sender extends Thread {
     private Fenetre fenetre;
     private ArrayList<Integer> keypress;
     private ArrayList<Integer[]> coords;
+    private ArrayList<Integer> clicks;
     private boolean run;
 
     public Sender(Fenetre fenetre){
         this.fenetre = fenetre;
         keypress = new ArrayList<Integer>();
         coords = new ArrayList<Integer[]>();
+        clicks = new ArrayList<Integer>();
         this.run = true;
     }
 
@@ -42,10 +44,30 @@ public class Sender extends Thread {
                     }
                 }
 
+                synchronized (clicks)
+                {
+                    if(clicks.size() != 0)
+                    {
+                        this.sendClicks();
+                    }
+                }
+
             }
         } catch (InterruptedException e)
         {
 
+        }
+    }
+
+    private synchronized void sendClicks() {
+        String json = this.getJsonClicks();
+
+        try {
+            this.sendHttpRequest(json);
+           // this.fenetre.addNTouches(this.keypress.size());
+            this.clicks.clear();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -86,7 +108,6 @@ public class Sender extends Thread {
             this.sendHttpRequest(json);
             this.fenetre.addNTouches(this.keypress.size());
             this.keypress.clear();
-            System.out.println(json);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -103,10 +124,26 @@ public class Sender extends Thread {
         return ret;
     }
 
+    public String getJsonClicks() {
+        String ret = "{\"source\":\"javalog\", \"clicks\": [";
+        for(Integer i : this.clicks)
+        {
+            ret += i.toString() +",";
+        }
+        ret = ret.substring(0, ret.length()-1) + "]}";
+        return ret;
+    }
+
     public synchronized void addKeypress()
     {
         long timestamp = new Date().getTime()/1000;
         this.keypress.add((int) timestamp);
+    }
+
+    public synchronized void addClick()
+    {
+        long timestamp = new Date().getTime()/1000;
+        this.clicks.add((int) timestamp);
     }
 
     public synchronized void addCoords(Integer[] c)
@@ -128,7 +165,7 @@ public class Sender extends Thread {
             throw new Exception("bad id !");
         }
 
-        System.out.println(s);
+        System.out.println("send : " + s);
 
         String url = "http://etud.insa-toulouse.fr/~livet/logger.php?user=" + id;
 
@@ -147,5 +184,6 @@ public class Sender extends Thread {
         System.out.println("retour : " + con.getResponseCode());
 
     }
+
 
 }
