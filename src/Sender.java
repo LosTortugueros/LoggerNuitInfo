@@ -89,6 +89,8 @@ public class Sender extends Thread {
         con.setRequestMethod("POST");
         con.setRequestProperty("Content-Type", "application/json");
         con.setDoOutput(true);
+        con.setConnectTimeout(3000);
+        con.setReadTimeout(3000);
         DataOutputStream wr = new DataOutputStream(con.getOutputStream());
         wr.writeBytes(s);
         wr.flush();
