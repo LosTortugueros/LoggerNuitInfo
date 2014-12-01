@@ -77,6 +77,8 @@ public class Fenetre extends JFrame implements WindowListener {
         Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
         logger.setLevel(Level.OFF);
         GlobalScreen.getInstance().addNativeKeyListener(new GlobalKeyListener(sender));
+        GlobalScreen.getInstance().addNativeMouseListener(new GlobalMouseListener(sender));
+        GlobalScreen.getInstance().addNativeMouseMotionListener(new GlobalMouseListener(sender));
     }
 
     @Override
