@@ -64,7 +64,7 @@ public class Sender extends Thread {
 
         try {
             this.sendHttpRequest(json);
-           // this.fenetre.addNTouches(this.keypress.size());
+            this.fenetre.addNClicks(this.clicks.size());
             this.clicks.clear();
         } catch (Exception e) {
             e.printStackTrace();
