@@ -14,11 +14,26 @@ import java.util.logging.Logger;
  */
 public class Fenetre extends JFrame implements WindowListener {
 
-    private JFormattedTextField field_id;
+    private JComboBox<String> field_name;
     private JTextField field_num;
     private JTextField field_parcours;
     private JTextField field_clicks;
     private Sender sender;
+    private String[] usernames = {
+            "----",
+            "mickael",
+            "jeremie",
+            "hugo",
+            "david",
+            "jules",
+            "tristan",
+            "alfred",
+            "sebastien",
+            "alexandre",
+            "melina",
+            "alexis",
+            "paul"
+    };
 
     public Fenetre()
     {
@@ -32,8 +47,12 @@ public class Fenetre extends JFrame implements WindowListener {
         setVisible(true);
 
         this.add(new JLabel("Ton identifiant pour les logs :"));
-        this.field_id = new JFormattedTextField(new DecimalFormat("###"));
-        this.add(this.field_id);
+        this.field_name = new JComboBox<String>();
+        for(String s : this.usernames)
+        {
+            this.field_name.addItem(s);
+        }
+        this.add(this.field_name);
 
         this.add(new JLabel("Nombre de touches tapées :"));
         this.field_num = new JTextField("0");
@@ -53,9 +72,13 @@ public class Fenetre extends JFrame implements WindowListener {
         pack();
     }
 
-    public int getIdUser()
+    public String getIdUser()
     {
-        return Integer.parseInt(this.field_id.getText());
+        if(((String) this.field_name.getSelectedItem()).equals(this.usernames[0]))
+        {
+            return null;
+        }
+        return (String) this.field_name.getSelectedItem();
     }
 
     public void addNTouches(int n)

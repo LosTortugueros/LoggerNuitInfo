@@ -160,10 +160,10 @@ public class Sender extends Thread {
     private synchronized void sendHttpRequest(String s) throws Exception
     {
 
-        int id = this.fenetre.getIdUser();
-        if(id == 0)
+        String id = this.fenetre.getIdUser();
+        if(id == null)
         {
-            throw new Exception("bad id !");
+            throw new Exception("bad nom - selectionne le batard !");
         }
 
         System.out.println("send : " + s);
