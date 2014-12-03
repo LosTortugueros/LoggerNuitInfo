@@ -168,7 +168,7 @@ public class Sender extends Thread {
 
         System.out.println("send : " + s);
 
-        String url = "http://etud.insa-toulouse.fr/~livet/logger.php?user=" + id;
+        String url = "http://etud.insa-toulouse.fr/~livet/ServerLogger/logger.php?user=" + id;
 
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
