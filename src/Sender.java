@@ -14,6 +14,7 @@ public class Sender extends Thread {
     private ArrayList<Integer> keypress;
     private ArrayList<Integer[]> coords;
     private ArrayList<Integer> clicks;
+    private ArrayList<Integer> nexts;
     private boolean run;
 
     public Sender(Fenetre fenetre){
@@ -21,6 +22,7 @@ public class Sender extends Thread {
         keypress = new ArrayList<Integer>();
         coords = new ArrayList<Integer[]>();
         clicks = new ArrayList<Integer>();
+        nexts = new ArrayList<Integer>();
         this.run = true;
     }
 
@@ -51,12 +53,31 @@ public class Sender extends Thread {
                         this.sendClicks();
                     }
                 }
+                synchronized (nexts)
+                {
+                    if(nexts.size() !=0)
+                    {
+                        this.sendNexts();
+                    }
+                }
 
             }
         } catch (InterruptedException e)
         {
 
         }
+    }
+
+    private void sendNexts() {
+        String json = this.getJsonNexts();
+        try {
+            this.sendHttpRequest(json);
+            this.fenetre.addNNext(this.nexts.size());
+            this.nexts.clear();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
     private synchronized void sendClicks() {
@@ -135,6 +156,10 @@ public class Sender extends Thread {
         return ret;
     }
 
+    public synchronized void addNext(){
+        long timestamp = new Date().getTime()/1000;
+        this.nexts.add((int) timestamp);
+    }
     public synchronized void addKeypress()
     {
         long timestamp = new Date().getTime()/1000;
@@ -186,5 +211,44 @@ public class Sender extends Thread {
 
     }
 
+    /*private synchronized void sendNextSpotify() throws Exception
+    {
 
+        String json = "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"core.playback.get_state\"}";
+        String id = this.fenetre.getIdUser();
+        if(id == null)
+        {
+            throw new Exception("bad nom - selectionne le batard !");
+        }
+
+        System.out.println("send : " + s);
+
+        String url = "http://etud.insa-toulouse.fr/~livet/ServerLogger/logger.php?user=" + id;
+
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+        con.setConnectTimeout(3000);
+        con.setReadTimeout(3000);
+        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+        wr.writeBytes(s);
+        wr.flush();
+        wr.close();
+
+        System.out.println("retour : " + con.getResponseCode());
+
+    }
+*/
+
+    public String getJsonNexts() {
+        String ret = "{\"source\":\"javalog\", \"next\": [";
+        for(Integer i : this.nexts)
+        {
+            ret += i.toString() +",";
+        }
+        ret = ret.substring(0, ret.length()-1) + "]}";
+        return ret;
+    }
 }
