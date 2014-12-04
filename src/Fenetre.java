@@ -4,6 +4,8 @@ import org.jnativehook.NativeHookException;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.lang.management.ManagementFactory;
@@ -22,6 +24,7 @@ public class Fenetre extends JFrame implements WindowListener {
     private JTextField field_parcours;
     private JTextField field_clicks;
     private JTextField field_ram;
+    private JTextField field_next;
     private Sender sender;
 
     private String[] usernames = {
@@ -45,7 +48,7 @@ public class Fenetre extends JFrame implements WindowListener {
 
         GlobalScreen.getInstance().setEventDispatcher(new SwingExecutorService());
 
-        GridLayout layout = new GridLayout(5,2);
+        GridLayout layout = new GridLayout(6,2);
         this.setLayout(layout);
         setTitle("Nuit de l'info - calcul clavier & souris");
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -80,6 +83,21 @@ public class Fenetre extends JFrame implements WindowListener {
         this.field_ram.setEditable(false);
         this.add(this.field_ram);
 
+        JButton next = new JButton("Next");
+
+        this.add(next);
+        this.field_next = new JTextField("0");
+        this.field_next.setEditable(false);
+        this.add(this.field_next);
+        next.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
+                logger.setLevel(Level.OFF);
+                addNNext(1);
+                sender.addNext();
+            }
+        });
         pack();
     }
 
@@ -96,6 +114,7 @@ public class Fenetre extends JFrame implements WindowListener {
     {
         this.field_num.setText("" + (n + Integer.parseInt(this.field_num.getText())));
     }
+
 
     public void addNParcours(float n)
     {
@@ -173,5 +192,9 @@ public class Fenetre extends JFrame implements WindowListener {
     @Override
     public void windowDeactivated(WindowEvent windowEvent) {
 
+    }
+
+    public void addNNext(int size) {
+        this.field_next.setText(""+(size+Integer.parseInt(this.field_next.getText())));
     }
 }
