@@ -101,6 +101,7 @@ public class Fenetre extends JFrame implements WindowListener {
         pack();
     }
 
+
     public String getIdUser()
     {
         if(((String) this.field_name.getSelectedItem()).equals(this.usernames[0]))
@@ -127,11 +128,10 @@ public class Fenetre extends JFrame implements WindowListener {
     }
 
     public void addRam(Long ram){
-        this.field_ram.setText(""+ram.toString());
+        this.field_ram.setText("" + ram.toString());
     }
 
-    public static void main(String[] str)
-    {
+    public static void main(String[] str) {
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override

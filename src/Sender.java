@@ -1,9 +1,11 @@
 import java.awt.*;
 import java.io.DataOutputStream;
+import java.lang.management.ManagementFactory;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import com.sun.management.OperatingSystemMXBean;
 
 /**
  * Created by tlk on 01/12/14.
@@ -14,6 +16,8 @@ public class Sender extends Thread {
     private ArrayList<Integer> keypress;
     private ArrayList<Integer[]> coords;
     private ArrayList<Integer> clicks;
+    private ArrayList<Long> ram;
+    private ArrayList<Integer> nexts;
     private boolean run;
 
     public Sender(Fenetre fenetre){
@@ -21,6 +25,8 @@ public class Sender extends Thread {
         keypress = new ArrayList<Integer>();
         coords = new ArrayList<Integer[]>();
         clicks = new ArrayList<Integer>();
+        ram = new ArrayList<Long>();
+        nexts = new ArrayList<Integer>();
         this.run = true;
     }
 
@@ -51,11 +57,58 @@ public class Sender extends Thread {
                         this.sendClicks();
                     }
                 }
+                synchronized (nexts)
+                {
+                    if(nexts.size() !=0)
+                    {
+                        this.sendNexts();
+                    }
+                }
+
+                synchronized (ram)
+                {
+                    Long ramAviable = ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getFreePhysicalMemorySize();
+                    ram.add(ramAviable);
+                    if(ram.size() != 0)
+                    {
+                        this.sendRam();
+                    }
+                }
 
             }
         } catch (InterruptedException e)
         {
 
+        }
+    }
+
+    public synchronized void addNext(){
+        long timestamp = new Date().getTime()/1000;
+        this.nexts.add((int) timestamp);
+    }
+
+
+    private void sendNexts() {
+        String json = this.getJsonNexts();
+        try {
+            this.sendHttpRequest(json);
+            this.fenetre.addNNext(this.nexts.size());
+            this.nexts.clear();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void sendRam(){
+        long memorySize = ((com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getFreePhysicalMemorySize();
+        String json = this.getJsonRam();
+        try {
+            this.sendHttpRequest(json);
+            this.fenetre.addRam(memorySize);
+            this.nexts.clear();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -72,6 +125,7 @@ public class Sender extends Thread {
     }
 
     private synchronized void sendParcour() {
+
         float taille = this.calcTaille();
         long timestamp = new Date().getTime()/1000;
         String json = "{\"source\": \"javalog\", \"time\":"+ timestamp +", \"distance\":"+taille+"}";
@@ -116,6 +170,7 @@ public class Sender extends Thread {
 
     private synchronized String getJsonKeypress()
     {
+
         String ret = "{\"source\":\"javalog\", \"keys\": [";
         for(Integer i : this.keypress)
         {
@@ -124,6 +179,15 @@ public class Sender extends Thread {
         ret = ret.substring(0, ret.length()-1) + "]}";
         return ret;
     }
+
+    private synchronized String getJsonRam()
+    {
+        long timestamp = new Date().getTime()/1000;
+        long memorySize = ((com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getFreePhysicalMemorySize();
+        String ret = "{\"source\":\"javalog\", \"ram\": "+memorySize+ ", \"time\": "+timestamp+"}";
+        return ret;
+    }
+
 
     public String getJsonClicks() {
         String ret = "{\"source\":\"javalog\", \"clicks\": [";
@@ -186,5 +250,42 @@ public class Sender extends Thread {
 
     }
 
+/*
+        String json = "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"core.playback.get_state\"}";
+        String id = this.fenetre.getIdUser();
+        if(id == null)
+        {
+            throw new Exception("bad nom - selectionne le batard !");
+        }
 
+        System.out.println("send : " + s);
+
+        String url = "http://etud.insa-toulouse.fr/~livet/ServerLogger/logger.php?user=" + id;
+
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+        con.setConnectTimeout(3000);
+        con.setReadTimeout(3000);
+        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+        wr.writeBytes(s);
+        wr.flush();
+        wr.close();
+
+        System.out.println("retour : " + con.getResponseCode());
+
+    }
+*/
+
+    public String getJsonNexts() {
+        String ret = "{\"source\":\"javalog\", \"next\": [";
+        for(Integer i : this.nexts)
+        {
+            ret += i.toString() +",";
+        }
+        ret = ret.substring(0, ret.length()-1) + "]}";
+        return ret;
+    }
 }
