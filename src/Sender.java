@@ -309,8 +309,8 @@ public class Sender extends Thread {
 
         String url = "http://10.32.3.190:6680/mopidy/rpc";
 
-        String name ="";
-        String artist = "";
+        String name ="a";
+        String artist = "b";
         try {
             URL obj = new URL(url);
             HttpURLConnection con = null;
