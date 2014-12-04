@@ -89,7 +89,6 @@ public class Fenetre extends JFrame implements WindowListener {
             public void actionPerformed(ActionEvent e) {
                 Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
                 logger.setLevel(Level.OFF);
-                addNNext(1);
                 sender.addNext();
                 try {
                     sender.sendNextSpotify();

@@ -1,5 +1,9 @@
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.lang.management.ManagementFactory;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -7,6 +11,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import com.sun.management.OperatingSystemMXBean;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Created by tlk on 01/12/14.
@@ -63,7 +69,7 @@ public class Sender extends Thread {
                 synchronized (nexts)
                 {
                     addMusic(getCurrentTrack());
-                    //fenetre.setMusic(getCurrentTrack());
+                    fenetre.setMusic(getCurrentTrack());
                     if(nexts.size() !=0)
                     {
                         this.sendNexts();
@@ -276,8 +282,6 @@ public class Sender extends Thread {
 
         String url = "http://10.32.3.190:6680/mopidy/rpc";
 
-        String url = "http://etud.insa-toulouse.fr/~livet/ServerLogger/logger.php?user=" + id;
-
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setRequestMethod("POST");
@@ -293,7 +297,7 @@ public class Sender extends Thread {
         System.out.println("retour : " + con.getResponseCode());
 
     }
-*/
+
 
     public synchronized String getCurrentTrack() throws Exception{
         String id = this.fenetre.getIdUser();
@@ -305,8 +309,13 @@ public class Sender extends Thread {
 
         String url = "http://10.32.3.190:6680/mopidy/rpc";
 
-        URL obj = new URL(url);
-        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        String name ="";
+        String artist = "";
+        try {
+            URL obj = new URL(url);
+            HttpURLConnection con = null;
+            con = (HttpURLConnection) obj.openConnection();
+
         con.setRequestMethod("POST");
         con.setRequestProperty("Content-Type", "application/json");
         con.setDoOutput(true);
@@ -328,8 +337,13 @@ public class Sender extends Thread {
         JSONObject toto = new JSONObject(response.toString());
 
         System.out.println(toto.toString());
-        String name = toto.getJSONObject("result").getString("name");
-        String artist = ((JSONObject)toto.getJSONObject("result").getJSONArray("artists").get(0)).getString("name");
+        name = toto.getJSONObject("result").getString("name");
+        artist = ((JSONObject)toto.getJSONObject("result").getJSONArray("artists").get(0)).getString("name");
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
         return (artist+"-"+name);
     }
 
