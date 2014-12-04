@@ -1,9 +1,18 @@
+import jdk.nashorn.internal.parser.JSONParser;
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.awt.*;
+import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by tlk on 01/12/14.
@@ -14,7 +23,8 @@ public class Sender extends Thread {
     private ArrayList<Integer> keypress;
     private ArrayList<Integer[]> coords;
     private ArrayList<Integer> clicks;
-    private ArrayList<Integer> nexts;
+    private HashMap<Integer, String> nexts;
+    private String currentMusic;
     private boolean run;
 
     public Sender(Fenetre fenetre){
@@ -22,7 +32,8 @@ public class Sender extends Thread {
         keypress = new ArrayList<Integer>();
         coords = new ArrayList<Integer[]>();
         clicks = new ArrayList<Integer>();
-        nexts = new ArrayList<Integer>();
+        nexts = new HashMap<Integer, String>();
+        currentMusic = "toto";
         this.run = true;
     }
 
@@ -55,6 +66,8 @@ public class Sender extends Thread {
                 }
                 synchronized (nexts)
                 {
+                    addMusic(getCurrentTrack());
+                    //fenetre.setMusic(getCurrentTrack());
                     if(nexts.size() !=0)
                     {
                         this.sendNexts();
@@ -65,14 +78,24 @@ public class Sender extends Thread {
         } catch (InterruptedException e)
         {
 
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    private void sendNexts() {
+    private synchronized void addMusic(String currentTrack) {
+        if(!currentMusic.equals(currentTrack) && !currentTrack.equals("Toto")){
+
+            currentMusic = currentTrack;
+            fenetre.setMusic(currentTrack);
+
+        }
+    }
+
+    private synchronized void sendNexts() {
         String json = this.getJsonNexts();
         try {
             this.sendHttpRequest(json);
-            this.fenetre.addNNext(this.nexts.size());
             this.nexts.clear();
         } catch (Exception e) {
             e.printStackTrace();
@@ -158,7 +181,11 @@ public class Sender extends Thread {
 
     public synchronized void addNext(){
         long timestamp = new Date().getTime()/1000;
-        this.nexts.add((int) timestamp);
+        try {
+            this.nexts.put((int)timestamp,getCurrentTrack());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     public synchronized void addKeypress()
     {
@@ -211,19 +238,16 @@ public class Sender extends Thread {
 
     }
 
-    /*private synchronized void sendNextSpotify() throws Exception
+    public synchronized void sendNextSpotify() throws Exception
     {
-
-        String json = "{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"core.playback.get_state\"}";
         String id = this.fenetre.getIdUser();
         if(id == null)
         {
             throw new Exception("bad nom - selectionne le batard !");
         }
+        System.out.println("send next");
 
-        System.out.println("send : " + s);
-
-        String url = "http://etud.insa-toulouse.fr/~livet/ServerLogger/logger.php?user=" + id;
+        String url = "http://10.32.3.190:6680/mopidy/rpc";
 
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -233,20 +257,71 @@ public class Sender extends Thread {
         con.setConnectTimeout(3000);
         con.setReadTimeout(3000);
         DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-        wr.writeBytes(s);
+        wr.writeBytes("{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"core.playback.next\"}");
         wr.flush();
         wr.close();
 
         System.out.println("retour : " + con.getResponseCode());
 
     }
-*/
+
+    public synchronized String getCurrentTrack() throws Exception{
+        String id = this.fenetre.getIdUser();
+        if(id == null)
+        {
+            throw new Exception("bad nom - selectionne le batard !");
+        }
+        System.out.println("send next");
+
+        String url = "http://10.32.3.190:6680/mopidy/rpc";
+
+        URL obj = new URL(url);
+        HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+        con.setRequestMethod("POST");
+        con.setRequestProperty("Content-Type", "application/json");
+        con.setDoOutput(true);
+        con.setConnectTimeout(3000);
+        con.setReadTimeout(3000);
+        DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+        wr.writeBytes("{\"jsonrpc\": \"2.0\", \"id\": 1, \"method\": \"core.playback.get_current_track\"}");
+        wr.flush();
+        wr.close();
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer response = new StringBuffer();
+
+        while ((inputLine = in.readLine()) != null) {
+            response.append(inputLine);
+        }
+        in.close();
+        JSONObject toto = new JSONObject(response.toString());
+
+        System.out.println(toto.toString());
+        String name = toto.getJSONObject("result").getString("name");
+        String artist = ((JSONObject)toto.getJSONObject("result").getJSONArray("artists").get(0)).getString("name");
+        return (artist+"-"+name);
+    }
+
 
     public String getJsonNexts() {
         String ret = "{\"source\":\"javalog\", \"next\": [";
-        for(Integer i : this.nexts)
-        {
-            ret += i.toString() +",";
+        String[] prout;
+        for(Map.Entry<Integer, String> entry : this.nexts.entrySet()) {
+            String name = entry.getValue();
+            if(name.contains("-")){
+                Integer timestamp = entry.getKey();
+                System.out.println(name);
+                prout = name.split("-");
+                ret += "{\"artist\":\"";
+                ret +=prout[0]+"\",\"name\":\"";
+                ret += prout[1]+"\",\"timestamp\":\"";
+                ret += timestamp+"\"},";
+            }
+
+
+            // do what you have to do here
+            // In your case, an other loop.
         }
         ret = ret.substring(0, ret.length()-1) + "]}";
         return ret;

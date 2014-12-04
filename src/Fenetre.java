@@ -20,7 +20,7 @@ public class Fenetre extends JFrame implements WindowListener {
     private JTextField field_num;
     private JTextField field_parcours;
     private JTextField field_clicks;
-    private JTextField field_next;
+    private JTextField field_music;
     private Sender sender;
     private String[] usernames = {
             "----",
@@ -75,16 +75,20 @@ public class Fenetre extends JFrame implements WindowListener {
         JButton next = new JButton("Next");
 
         this.add(next);
-        this.field_next = new JTextField("0");
-        this.field_next.setEditable(false);
-        this.add(this.field_next);
+        this.field_music = new JTextField("Toto");
+        this.field_music.setEditable(false);
+        this.add(this.field_music);
         next.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
                 logger.setLevel(Level.OFF);
-                addNNext(1);
                 sender.addNext();
+                try {
+                    sender.sendNextSpotify();
+                } catch (Exception e1) {
+                    e1.printStackTrace();
+                }
             }
         });
         pack();
@@ -178,7 +182,7 @@ public class Fenetre extends JFrame implements WindowListener {
 
     }
 
-    public void addNNext(int size) {
-        this.field_next.setText(""+(size+Integer.parseInt(this.field_next.getText())));
+    public void setMusic(String taRace) {
+        this.field_music.setText(taRace);
     }
 }
