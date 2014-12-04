@@ -21,6 +21,7 @@ public class Fenetre extends JFrame implements WindowListener {
     private JTextField field_parcours;
     private JTextField field_clicks;
     private JTextField field_music;
+    private JTextField field_ram;
     private Sender sender;
     private String[] usernames = {
             "----",
@@ -42,7 +43,7 @@ public class Fenetre extends JFrame implements WindowListener {
     {
         GlobalScreen.getInstance().setEventDispatcher(new SwingExecutorService());
 
-        GridLayout layout = new GridLayout(5,2);
+        GridLayout layout = new GridLayout(6,2);
         this.setLayout(layout);
         setTitle("Nuit de l'info - calcul clavier & souris");
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -72,6 +73,11 @@ public class Fenetre extends JFrame implements WindowListener {
         this.field_clicks.setEditable(false);
         this.add(this.field_clicks);
 
+        this.add(new JLabel("Ram aviable :"));
+        this.field_ram = new JTextField("0");
+        this.field_ram.setEditable(false);
+        this.add(this.field_ram);
+
         JButton next = new JButton("Next");
 
         this.add(next);
@@ -83,6 +89,7 @@ public class Fenetre extends JFrame implements WindowListener {
             public void actionPerformed(ActionEvent e) {
                 Logger logger = Logger.getLogger(GlobalScreen.class.getPackage().getName());
                 logger.setLevel(Level.OFF);
+                addNNext(1);
                 sender.addNext();
                 try {
                     sender.sendNextSpotify();
@@ -119,8 +126,12 @@ public class Fenetre extends JFrame implements WindowListener {
         this.field_clicks.setText("" + (n + Integer.parseInt(this.field_clicks.getText())));
     }
 
-    public static void main(String[] str)
-    {
+    public void addRam(Long ram){
+        this.field_ram.setText("" + ram.toString());
+    }
+
+    public static void main(String[] str) {
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {

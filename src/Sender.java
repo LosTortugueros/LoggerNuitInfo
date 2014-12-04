@@ -1,18 +1,12 @@
-import jdk.nashorn.internal.parser.JSONParser;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.awt.*;
-import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import com.sun.management.OperatingSystemMXBean;
 
 /**
  * Created by tlk on 01/12/14.
@@ -25,6 +19,7 @@ public class Sender extends Thread {
     private ArrayList<Integer> clicks;
     private HashMap<Integer, String> nexts;
     private String currentMusic;
+    private ArrayList<Long> ram;
     private boolean run;
 
     public Sender(Fenetre fenetre){
@@ -34,6 +29,7 @@ public class Sender extends Thread {
         clicks = new ArrayList<Integer>();
         nexts = new HashMap<Integer, String>();
         currentMusic = "toto";
+        ram = new ArrayList<Long>();
         this.run = true;
     }
 
@@ -74,6 +70,16 @@ public class Sender extends Thread {
                     }
                 }
 
+                synchronized (ram)
+                {
+                    Long ramAviable = ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getFreePhysicalMemorySize();
+                    ram.add(ramAviable);
+                    if(ram.size() != 0)
+                    {
+                        this.sendRam();
+                    }
+                }
+
             }
         } catch (InterruptedException e)
         {
@@ -101,6 +107,18 @@ public class Sender extends Thread {
             e.printStackTrace();
         }
 
+    }
+
+    private void sendRam(){
+        long memorySize = ((com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getFreePhysicalMemorySize();
+        String json = this.getJsonRam();
+        try {
+            this.sendHttpRequest(json);
+            this.fenetre.addRam(memorySize);
+            this.nexts.clear();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private synchronized void sendClicks() {
@@ -168,6 +186,15 @@ public class Sender extends Thread {
         ret = ret.substring(0, ret.length()-1) + "]}";
         return ret;
     }
+
+    private synchronized String getJsonRam()
+    {
+        long timestamp = new Date().getTime()/1000;
+        long memorySize = ((com.sun.management.OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getFreePhysicalMemorySize();
+        String ret = "{\"source\":\"javalog\", \"ram\": "+memorySize+ ", \"time\": "+timestamp+"}";
+        return ret;
+    }
+
 
     public String getJsonClicks() {
         String ret = "{\"source\":\"javalog\", \"clicks\": [";
@@ -249,6 +276,8 @@ public class Sender extends Thread {
 
         String url = "http://10.32.3.190:6680/mopidy/rpc";
 
+        String url = "http://etud.insa-toulouse.fr/~livet/ServerLogger/logger.php?user=" + id;
+
         URL obj = new URL(url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
         con.setRequestMethod("POST");
@@ -264,6 +293,7 @@ public class Sender extends Thread {
         System.out.println("retour : " + con.getResponseCode());
 
     }
+*/
 
     public synchronized String getCurrentTrack() throws Exception{
         String id = this.fenetre.getIdUser();
