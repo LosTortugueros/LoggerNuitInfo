@@ -1,9 +1,11 @@
 import java.awt.*;
 import java.io.DataOutputStream;
+import java.lang.management.ManagementFactory;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Date;
+import com.sun.management.OperatingSystemMXBean;
 
 /**
  * Created by tlk on 01/12/14.
@@ -14,6 +16,8 @@ public class Sender extends Thread {
     private ArrayList<Integer> keypress;
     private ArrayList<Integer[]> coords;
     private ArrayList<Integer> clicks;
+    private ArrayList<Long> ram;
+
     private boolean run;
 
     public Sender(Fenetre fenetre){
@@ -21,6 +25,7 @@ public class Sender extends Thread {
         keypress = new ArrayList<Integer>();
         coords = new ArrayList<Integer[]>();
         clicks = new ArrayList<Integer>();
+        ram = new ArrayList<Long>();
         this.run = true;
     }
 
@@ -52,6 +57,16 @@ public class Sender extends Thread {
                     }
                 }
 
+                synchronized (ram)
+                {
+                    Long ramAviable = ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getFreePhysicalMemorySize();
+                    ram.add(ramAviable);
+                    if(ram.size() != 0)
+                    {
+                        this.sendRam();
+                    }
+                }
+
             }
         } catch (InterruptedException e)
         {
@@ -72,6 +87,7 @@ public class Sender extends Thread {
     }
 
     private synchronized void sendParcour() {
+
         float taille = this.calcTaille();
         long timestamp = new Date().getTime()/1000;
         String json = "{\"source\": \"javalog\", \"time\":"+ timestamp +", \"distance\":"+taille+"}";
@@ -84,6 +100,17 @@ public class Sender extends Thread {
             e.printStackTrace();
         }
 
+    }
+
+    private synchronized void sendRam(){
+        String json = this.getJsonRam();
+        System.out.println("on envoit "+json);
+        try {
+            this.sendHttpRequest(json);
+            this.fenetre.addRam(this.getRamAviable());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private synchronized float calcTaille() {
@@ -125,6 +152,8 @@ public class Sender extends Thread {
         return ret;
     }
 
+
+
     public String getJsonClicks() {
         String ret = "{\"source\":\"javalog\", \"clicks\": [";
         for(Integer i : this.clicks)
@@ -133,6 +162,16 @@ public class Sender extends Thread {
         }
         ret = ret.substring(0, ret.length()-1) + "]}";
         return ret;
+    }
+
+    public String getJsonRam(){
+        long timestamp = new Date().getTime()/1000;
+        String ret = "{\"source\":\"javalog\", \"ram\":"+ this.getRamAviable() +", \"time\": "+timestamp+"}";
+        return ret;
+    }
+
+    public Long getRamAviable(){
+        return this.ram.get(this.ram.size()-1);
     }
 
     public synchronized void addKeypress()
@@ -150,6 +189,10 @@ public class Sender extends Thread {
     public synchronized void addCoords(Integer[] c)
     {
         this.coords.add(c);
+    }
+
+    public synchronized void addRam(Long c){
+        this.ram.add(c);
     }
 
     public synchronized void setRun(boolean a)

@@ -1,3 +1,4 @@
+import com.sun.management.OperatingSystemMXBean;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
@@ -5,7 +6,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
+import java.lang.management.ManagementFactory;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,7 +21,9 @@ public class Fenetre extends JFrame implements WindowListener {
     private JTextField field_num;
     private JTextField field_parcours;
     private JTextField field_clicks;
+    private JTextField field_ram;
     private Sender sender;
+
     private String[] usernames = {
             "----",
             "mickael",
@@ -37,9 +42,10 @@ public class Fenetre extends JFrame implements WindowListener {
 
     public Fenetre()
     {
+
         GlobalScreen.getInstance().setEventDispatcher(new SwingExecutorService());
 
-        GridLayout layout = new GridLayout(4,2);
+        GridLayout layout = new GridLayout(5,2);
         this.setLayout(layout);
         setTitle("Nuit de l'info - calcul clavier & souris");
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
@@ -69,6 +75,11 @@ public class Fenetre extends JFrame implements WindowListener {
         this.field_clicks.setEditable(false);
         this.add(this.field_clicks);
 
+        this.add(new JLabel("Ram aviable :"));
+        this.field_ram = new JTextField("0");
+        this.field_ram.setEditable(false);
+        this.add(this.field_ram);
+
         pack();
     }
 
@@ -96,8 +107,13 @@ public class Fenetre extends JFrame implements WindowListener {
         this.field_clicks.setText("" + (n + Integer.parseInt(this.field_clicks.getText())));
     }
 
+    public void addRam(Long ram){
+        this.field_ram.setText(""+ram.toString());
+    }
+
     public static void main(String[] str)
     {
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
